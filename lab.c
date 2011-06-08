@@ -16,7 +16,6 @@ int main(int argc, char **argv)
 	GtkWidget *glarea,
 	// Boxes
 			  *main_vbox,
-			  *vbox,
 	// Menus
 			  *menubar,
 	// Expander to show settings
@@ -119,8 +118,7 @@ int main(int argc, char **argv)
 
 	// Boxes for tabs
 	sphere = gtk_table_new(3, 6, FALSE);
-	light = gtk_table_new(2, 3, TRUE);
-	vbox = gtk_vbox_new(2, FALSE);
+	light = gtk_table_new(2, 3, FALSE);
 
 	gtk_alignment_set(GTK_ALIGNMENT(aligns[8]), 0.5, 0.5, 0.0, 0.0);
 	gtk_alignment_set(GTK_ALIGNMENT(aligns[9]), 0.5, 0.5, 0.0, 0.0);
@@ -148,15 +146,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	gtk_box_pack_start(GTK_BOX(vbox), light, FALSE, FALSE, 0);
-
 	// Notebook
 	notebook = gtk_notebook_new();
 
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_BOTTOM);
 
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), sphere, gtk_label_new("Spheres"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, gtk_label_new("Light"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), light, gtk_label_new("Light"));
 
 	main_vbox = gtk_vbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, FALSE, 0);
@@ -167,7 +163,7 @@ int main(int argc, char **argv)
 
 	gtk_widget_show_all(GTK_WIDGET(main_window));
 
-	g_timeout_add(10, (GSourceFunc)timer_event, (gpointer)main_window);
+	g_timeout_add(50, (GSourceFunc)timer_event, (gpointer)main_window);
 
 	gtk_main();
 
