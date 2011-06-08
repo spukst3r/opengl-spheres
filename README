@@ -1,1 +1,6 @@
-blah blah blah
+OpenGL lab
+
+Requirements:
+* gtk+-2.2
+* gtkglarea
+
