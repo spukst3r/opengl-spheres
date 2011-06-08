@@ -7,9 +7,9 @@
 #include "gui.h"
 #include "gl.h"
 
-#define SHAPE_COUNT 10
-
 GtkWidget *main_window;
+
+GdkColor colors[COLOR_BUTTON_COUNT];
 
 int main(int argc, char **argv)
 {
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	// Labels
 			  *labels[10],
 	// Settings widgets
-			  *color_buttons[13],
+			  *color_buttons[COLOR_BUTTON_COUNT],
 			  *spins[2],
 	// Notebook (tab pages)
 			  *notebook;
@@ -109,12 +109,13 @@ int main(int argc, char **argv)
 	}
 
 	// Color buttons and spins
-	for (i=0; i<13; i++)
+	for (i=0; i<COLOR_BUTTON_COUNT; i++)
 	{
 		color_buttons[i] = gtk_color_button_new();
 		if (i < 2)
 			spins[i] = gtk_spin_button_new_with_range(0.0, 100.0, 0.5);
 	}
+	init_color_buttons(color_buttons);
 
 	// Boxes for tabs
 	sphere = gtk_table_new(3, 6, FALSE);
@@ -126,23 +127,30 @@ int main(int argc, char **argv)
 	gtk_table_attach(GTK_TABLE(sphere), aligns[8], 1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
 	gtk_table_attach(GTK_TABLE(sphere), aligns[9], 2, 3, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
 
+	gtk_table_attach(GTK_TABLE(sphere), spins[0], 1, 2, 5, 6, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_table_attach(GTK_TABLE(sphere), spins[1], 2, 3, 5, 6, GTK_FILL, GTK_FILL, 0, 0);
+
 	for (i=0; i<5; i++)
 	{
 		gtk_widget_set_size_request(aligns[i], 150, -1);
-		gtk_widget_set_size_request(color_buttons[i],     120, -1);
-		gtk_widget_set_size_request(color_buttons[i + 5], 120, -1);
-
 		gtk_table_attach(GTK_TABLE(sphere), aligns[i], 0, 1, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
-		gtk_table_attach(GTK_TABLE(sphere), color_buttons[i], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
-		gtk_table_attach(GTK_TABLE(sphere), color_buttons[i + 5], 2, 3, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+
+		if (i < 4)
+		{
+			gtk_widget_set_size_request(color_buttons[i],     120, -1);
+			gtk_widget_set_size_request(color_buttons[i + 4], 120, -1);
+
+			gtk_table_attach(GTK_TABLE(sphere), color_buttons[i], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+			gtk_table_attach(GTK_TABLE(sphere), color_buttons[i + 4], 2, 3, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+		}
 
 		if (i < 3)
 		{
 			gtk_widget_set_size_request(aligns[i + 5], 150, -1);
-			gtk_widget_set_size_request(color_buttons[i + 10], 120, -1);
+			gtk_widget_set_size_request(color_buttons[i + 8], 120, -1);
 
 			gtk_table_attach(GTK_TABLE(light), aligns[i + 5], 0, 1, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
-			gtk_table_attach(GTK_TABLE(light), color_buttons[i + 10], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+			gtk_table_attach(GTK_TABLE(light), color_buttons[i + 8], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
 		}
 	}
 

@@ -3,6 +3,7 @@
 #include "gui.h"
 
 extern GtkWidget *main_window;
+extern GdkColor colors[COLOR_BUTTON_COUNT];
 
 static GtkActionEntry entries[] = {
 	{ "FileMenuAction", NULL, "_File" },
@@ -20,6 +21,30 @@ void timer_event(GtkWidget *widget)
 	if (widget->window == NULL)
 		return;
 	gtk_widget_queue_draw(widget);
+}
+
+void init_color_buttons(GtkWidget **buttons)
+{
+	int i;
+	const gchar *str_colors[COLOR_BUTTON_COUNT] = {
+		"#95FF00",
+		"#EFFF00",
+		"#00FF2D",
+		"#FFFFFF",
+		"#000000",
+		"#000000",
+		"#000000",
+		"#000000",
+		"#000000",
+		"#000000",
+		"#000000"
+	};
+
+	for (i=0; i<COLOR_BUTTON_COUNT; i++)
+	{
+		gdk_color_parse(str_colors[i], &colors[i]);
+		gtk_color_button_set_color(GTK_COLOR_BUTTON(buttons[i]), &colors[i]);
+	}
 }
 
 void show_about()
