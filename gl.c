@@ -44,9 +44,9 @@ gint init(GtkWidget *widget)
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);
+		//glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_LIGHTING);
+		//glEnable(GL_LIGHT0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -68,8 +68,8 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glLoadIdentity();
 
 		//glRotatef(x+=0.1, 0, 1, 0);
-		glShadeModel(GL_SMOOTH);
-		draw_sphere(0.5, 15, 15);
+		//glShadeModel(GL_SMOOTH);
+		//draw_sphere(0.5, 15, 15);
 
 		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
 	}

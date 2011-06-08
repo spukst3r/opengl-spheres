@@ -5,116 +5,32 @@
 #include <GL/gl.h>
 
 #include "gui.h"
+#include "gl.h"
 
 #define SHAPE_COUNT 10
 
 GtkWidget *main_window;
 
-void draw_sphere(double r, int lats, int longs)
-{
-	int i, j;
-
-	for (i=0; i<=lats; i++)
-	{
-		double lat0 = M_PI * (-0.5 + (double)(i-1) / lats);
-		double z0 = sin(lat0);
-		double zr0 = cos(lat0);
-
-		double lat1 = M_PI * (-0.5 + (double)i / lats);
-		double z1 = sin(lat1);
-		double zr1 = cos(lat1);
-
-		glBegin(GL_QUAD_STRIP);
-
-		for (j=0; j<=longs; j++)
-		{
-			double lng = 2 * M_PI * (double)(j - 1) / longs,
-				   x = cos(lng),
-				   y = sin(lng);
-
-			glNormal3f(x * zr0, y * zr0, z0);
-			glVertex3f(x * zr0, y * zr0, z0);
-			glNormal3f(x * zr1, y * zr1, z1);
-			glVertex3f(x * zr1, y * zr1, z1);
-		}
-
-		glEnd();
-	}
-}
-
-gint init(GtkWidget *widget)
-{
-	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
-	{
-		glViewport(0, 0, widget->allocation.width, widget->allocation.height);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-	}
-	return TRUE;
-}
-
-gint draw(GtkWidget *widget, GdkEventExpose *event)
-{
-	if (event->count > 0)
-		return TRUE;
-	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
-	{
-		static GLfloat x = 0;
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0, 0, 0, 1);
-
-		glLoadIdentity();
-
-		//glRotatef(x+=0.1, 0, 1, 0);
-		glShadeModel(GL_SMOOTH);
-		draw_sphere(0.5, 15, 15);
-
-		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
-	}
-	return TRUE;
-}
-
-gint reshape(GtkWidget *widget, GdkEventConfigure *event)
-{
-	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
-	{
-		int w = widget->allocation.width,
-			h = widget->allocation.height;
-
-		glViewport(0, 0, w, h);
-		gluPerspective(45.0f, (GLfloat)(w)/(GLfloat)h, 0.1f, 100.0f);
-	}
-	return TRUE;
-}
-
 int main(int argc, char **argv)
 {
 	GtkWidget *glarea,
 	// Boxes
+			  *main_vbox,
 			  *vbox,
 	// Menus
 			  *menubar,
 	// Expander to show settings
 			  *expander,
 	// Tables for tabs
-			  *sphere1,
-			  *sphere2,
+			  *sphere,
 			  *light,
-			  *light_vbox,
+			  *light_main_vbox,
 	// Aligns for labels
-			  *aligns[13],
+			  *aligns[10],
 	// Labels
-			  *labels[13],
+			  *labels[10],
 	// Settings widgets
-			  *color_buttons[11],
+			  *color_buttons[13],
 			  *spins[2],
 	// Notebook (tab pages)
 			  *notebook;
@@ -125,6 +41,8 @@ int main(int argc, char **argv)
 		"Specular:",
 		"Emission:",
 		"Shininess:",
+		"Sphere",
+		"Glass",
 	};
 
 	gboolean t = TRUE;
@@ -170,21 +88,29 @@ int main(int argc, char **argv)
 	gtk_signal_connect(GTK_OBJECT(main_window), "key-press-event",
 			G_CALLBACK(key_press), NULL);
 
-	gtk_widget_set_size_request(GTK_WIDGET(glarea), 480, 480);
+	gtk_widget_set_size_request(GTK_WIDGET(glarea), 480, 320);
 
 	menubar = create_menu(main_window);
 	expander = gtk_expander_new("Settings");
 
 	// aligns and labels
-	for (i=0; i<13; i++)
+	for (i=0; i<10; i++)
 	{
+		if (i > 7)
+		{
+			labels[i] = gtk_label_new(labels_text[i - 3]);
+			aligns[i] = gtk_alignment_new(0.1, 0.5, 0.0, 0.0);
+			gtk_container_add(GTK_CONTAINER(aligns[i]), labels[i]);
+			continue;
+		}
+
 		labels[i] = gtk_label_new(labels_text[i % 5]);
-		aligns[i] = gtk_alignment_new(0.3, 0.5, 0.0, 0.0);
+		aligns[i] = gtk_alignment_new(0.1, 0.5, 0.0, 0.0);
 		gtk_container_add(GTK_CONTAINER(aligns[i]), labels[i]);
 	}
 
 	// Color buttons and spins
-	for (i=0; i<11; i++)
+	for (i=0; i<13; i++)
 	{
 		color_buttons[i] = gtk_color_button_new();
 		if (i < 2)
@@ -192,58 +118,52 @@ int main(int argc, char **argv)
 	}
 
 	// Boxes for tabs
-	sphere1 = gtk_table_new(2, 5, TRUE);
-	sphere2 = gtk_table_new(2, 5, TRUE);
+	sphere = gtk_table_new(3, 6, FALSE);
 	light = gtk_table_new(2, 3, TRUE);
+	vbox = gtk_vbox_new(2, FALSE);
+
+	gtk_alignment_set(GTK_ALIGNMENT(aligns[8]), 0.5, 0.5, 0.0, 0.0);
+	gtk_alignment_set(GTK_ALIGNMENT(aligns[9]), 0.5, 0.5, 0.0, 0.0);
+
+	gtk_table_attach(GTK_TABLE(sphere), aligns[8], 1, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+	gtk_table_attach(GTK_TABLE(sphere), aligns[9], 2, 3, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
 
 	for (i=0; i<5; i++)
 	{
-		// Sphere tab:
-		gtk_table_attach(GTK_TABLE(sphere1), aligns[i],
-				0, 1, i, i+1, GTK_FILL, GTK_FILL, 0, 0);
-		if (i < 4)
-				gtk_table_attach(GTK_TABLE(sphere1), color_buttons[i],
-					1, 2, i, i+1, GTK_FILL, GTK_FILL, 0, 0);
+		gtk_widget_set_size_request(aligns[i], 150, -1);
+		gtk_widget_set_size_request(color_buttons[i],     120, -1);
+		gtk_widget_set_size_request(color_buttons[i + 5], 120, -1);
 
-		// Glass sphere tab:
-		gtk_table_attach(GTK_TABLE(sphere2), aligns[i + 5],
-				0, 1, i, i+1, GTK_FILL, GTK_FILL, 0, 0);
-		if (i < 4)
-				gtk_table_attach(GTK_TABLE(sphere2), color_buttons[i+4],
-					1, 2, i, i+1, GTK_FILL, GTK_FILL, 0, 0);
+		gtk_table_attach(GTK_TABLE(sphere), aligns[i], 0, 1, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+		gtk_table_attach(GTK_TABLE(sphere), color_buttons[i], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+		gtk_table_attach(GTK_TABLE(sphere), color_buttons[i + 5], 2, 3, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
 
-		// Light tab:
 		if (i < 3)
 		{
-			gtk_table_attach(GTK_TABLE(light), aligns[i + 10], 0, 1, i, i+1,
-					GTK_FILL, GTK_FILL, 0, 0);
-			gtk_table_attach(GTK_TABLE(light), color_buttons[i+8], 1, 2, i, i+1,
-					GTK_FILL, GTK_FILL, 0, 0);
+			gtk_widget_set_size_request(aligns[i + 5], 150, -1);
+			gtk_widget_set_size_request(color_buttons[i + 10], 120, -1);
+
+			gtk_table_attach(GTK_TABLE(light), aligns[i + 5], 0, 1, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
+			gtk_table_attach(GTK_TABLE(light), color_buttons[i + 10], 1, 2, i+1, i+2, GTK_FILL, GTK_FILL, 0, 0);
 		}
 	}
 
-	gtk_table_attach(GTK_TABLE(sphere1), spins[0], 1, 2, 4, 5, GTK_FILL, GTK_FILL, 0, 0);
-	gtk_table_attach(GTK_TABLE(sphere2), spins[1], 1, 2, 4, 5, GTK_FILL, GTK_FILL, 0, 0);
-
-	gtk_table_set_col_spacing(GTK_TABLE(sphere1), 0, 100);
-	gtk_table_set_col_spacing(GTK_TABLE(sphere2), 0, 100);
-	gtk_table_set_col_spacing(GTK_TABLE(light), 0, 100);
+	gtk_box_pack_start(GTK_BOX(vbox), light, FALSE, FALSE, 0);
 
 	// Notebook
 	notebook = gtk_notebook_new();
 
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_BOTTOM);
 
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), sphere1, gtk_label_new("Sphere"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), sphere2, gtk_label_new("Glass sphere"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), light, gtk_label_new("Light"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), sphere, gtk_label_new("Spheres"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, gtk_label_new("Light"));
 
-	vbox = gtk_vbox_new(FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), menubar, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), glarea, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), notebook, FALSE, FALSE, 0);
+	main_vbox = gtk_vbox_new(FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(main_vbox), glarea, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(main_vbox), notebook, FALSE, FALSE, 0);
 
-	gtk_container_add(GTK_CONTAINER(main_window), vbox);
+	gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 
 	gtk_widget_show_all(GTK_WIDGET(main_window));
 
