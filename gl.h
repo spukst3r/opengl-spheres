@@ -3,7 +3,9 @@
 
 #include <gtk/gtk.h>
 
-void draw_sphere(double r, int lats, int longs);
+void normalize(GLfloat *a);
+void draw_triangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, GLfloat f);
+void draw_sphere(int ndiv, float radius);
 
 gint init(GtkWidget *widget);
 gint draw(GtkWidget *widget, GdkEventExpose *event);

@@ -4,36 +4,72 @@
 
 #include "gl.h"
 
-void draw_sphere(double r, int lats, int longs)
+#define X 0.525731112119133606 
+#define Z 0.850650808352039932
+
+static GLfloat vdata[12][3] = {    
+	    {-X, 0.0, Z}, {X, 0.0, Z},  {-X, 0.0, -Z}, {X, 0.0, -Z},
+		{0.0, Z, X},  {0.0, Z, -X}, {0.0, -Z, X},  {0.0, -Z, -X},    
+		{Z, X, 0.0},  {-Z, X, 0.0}, {Z, -X, 0.0},  {-Z, -X, 0.0} 
+};
+static GLuint tindices[20][3] = { 
+	    {0,4,1},  {0,9,4},  {9,5,4},  {4,5,8},  {4,8,1},    
+		{8,10,1}, {8,3,10}, {5,3,8},  {5,2,3},  {2,7,3},    
+		{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6}, 
+		{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5},  {7,2,11}
+};
+
+void normalize(GLfloat *a)
 {
-	int i, j;
+	GLfloat d;
 
-	for (i=0; i<=lats; i++)
+	d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+
+	a[0] /= d;
+	a[1] /= d;
+	a[2] /= d;
+}
+
+void draw_triangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, GLfloat r)
+{
+	if (div <= 0)
 	{
-		double lat0 = M_PI * (-0.5 + (double)(i-1) / lats);
-		double z0 = sin(lat0);
-		double zr0 = cos(lat0);
-
-		double lat1 = M_PI * (-0.5 + (double)i / lats);
-		double z1 = sin(lat1);
-		double zr1 = cos(lat1);
-
-		glBegin(GL_QUAD_STRIP);
-
-		for (j=0; j<=longs; j++)
-		{
-			double lng = 2 * M_PI * (double)(j - 1) / longs,
-				   x = cos(lng),
-				   y = sin(lng);
-
-			glNormal3f(x * zr0, y * zr0, z0);
-			glVertex3f(x * zr0, y * zr0, z0);
-			glNormal3f(x * zr1, y * zr1, z1);
-			glVertex3f(x * zr1, y * zr1, z1);
-		}
-
-		glEnd();
+		glNormal3fv(a); glVertex3f(a[0] * r, a[1] * r, a[2] * r);
+		glNormal3fv(b); glVertex3f(b[0] * r, b[1] * r, b[2] * r);
+		glNormal3fv(c); glVertex3f(c[0] * r, c[1] * r, c[2] * r);
 	}
+	else
+	{
+		GLfloat ab[3], ac[3], bc[3];
+		int i;
+
+		for (i=0; i<3; i++)
+		{
+			ab[i] = (a[i] + b[i]) / 2;
+			ac[i] = (a[i] + c[i]) / 2;
+			bc[i] = (b[i] + c[i]) / 2;
+		}
+		normalize(ab), normalize(ac), normalize(bc);
+
+		draw_triangle(a, ab, ac, div - 1, r);
+		draw_triangle(b, bc, ab, div - 1, r);
+		draw_triangle(c, ac, bc, div - 1, r);
+		draw_triangle(ab, bc, ac, div - 1, r);
+	}
+}
+
+void draw_sphere(int ndiv, float radius)
+{
+	int i;
+
+	glBegin(GL_TRIANGLES);
+
+	for (i=0; i<20; i++)
+		draw_triangle(vdata[tindices[i][0]],
+				vdata[tindices[i][1]],
+				vdata[tindices[i][2]],
+				ndiv, radius);
+	glEnd();
 }
 
 gint init(GtkWidget *widget)
@@ -44,9 +80,11 @@ gint init(GtkWidget *widget)
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
-		//glEnable(GL_DEPTH_TEST);
-		//glEnable(GL_LIGHTING);
-		//glEnable(GL_LIGHT0);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+
+		glShadeModel(GL_SMOOTH);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -67,9 +105,8 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 
 		glLoadIdentity();
 
-		//glRotatef(x+=0.1, 0, 1, 0);
-		//glShadeModel(GL_SMOOTH);
-		//draw_sphere(0.5, 15, 15);
+		glRotatef(x+=0.1, 0, 1, 0);
+		draw_sphere(2, 1.0);
 
 		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
 	}
@@ -84,7 +121,8 @@ gint reshape(GtkWidget *widget, GdkEventConfigure *event)
 			h = widget->allocation.height;
 
 		glViewport(0, 0, w, h);
-		gluPerspective(45.0f, (GLfloat)(w)/(GLfloat)h, 0.1f, 100.0f);
+		glLoadIdentity();
+		gluPerspective(45.0, ((GLfloat)w)/((GLfloat)h), 0.0, 100.0);
 	}
 	return TRUE;
 }
