@@ -218,10 +218,12 @@ void create_widgets(int *argc, char ***argv)
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), sphere, gtk_label_new("Spheres"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), light, gtk_label_new("Light"));
 
+	gtk_container_add(GTK_CONTAINER(expander), notebook);
+
 	main_vbox = gtk_vbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(main_vbox), glarea, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(main_vbox), notebook, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(main_vbox), expander, FALSE, FALSE, 0);
 
 	gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 
