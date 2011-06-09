@@ -112,7 +112,7 @@ void create_widgets(int *argc, char ***argv)
 		gtk_exit(-1);
 	}
 
-	main_window = gtk_window_new( GTK_WINDOW_TOPLEVEL);
+	main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(main_window), "OpenGL");
 	gtk_container_set_border_width(GTK_CONTAINER(main_window), 2);
 	gtk_signal_connect(GTK_OBJECT(main_window), "delete_event",

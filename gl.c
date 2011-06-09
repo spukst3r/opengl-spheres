@@ -99,7 +99,7 @@ gint init(GtkWidget *widget)
 		glEnable(GL_NORMALIZE);
 
 		//glDepthFunc(GL_LEQUAL);
-
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, m_ambient);
 		glShadeModel(GL_SMOOTH);
 
@@ -134,7 +134,12 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
-		glOrtho(-2*aspect_ratio, 2*aspect_ratio, -2.0, 2.0, -10.0, 10.0);
+		//glOrtho(-2*aspect_ratio, 2*aspect_ratio, -2.0, 2.0, -10.0, 10.0);
+		gluPerspective(45.0, aspect_ratio, 0.1, 150.0);
+
+		gluLookAt(0.0, -2.0, -6.0,
+				0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -145,15 +150,18 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glMaterialfv(GL_FRONT, GL_EMISSION, m_sphere[3]);
 
 		glPushMatrix();
-		glRotatef(x+=0.5, 0.0, 1.0, 0.0);
-		glTranslatef(1.0, 0.0, 0.0);
-		draw_sphere(3, 0.5);
-		glPopMatrix();
-
-		glPushMatrix();
-		glRotatef(x+=0.5, 0.0, 1.0, 0.0);
-		glTranslatef(-1.0, 0.0, 0.0);
-		draw_sphere(3, 0.2);
+			//glTranslatef(x, 0.0, 0.0);
+			glPushMatrix();
+				glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+				glTranslatef(0.0, 0.0, -1.0);
+				draw_sphere(3, 0.4);
+			glPopMatrix();
+	
+			glPushMatrix();
+				glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+				glTranslatef(0.0, 0.0, 1.0);
+				draw_sphere(3, 0.4);
+			glPopMatrix();
 		glPopMatrix();
 
 		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
