@@ -20,11 +20,11 @@ static GLuint tindices[20][3] = {
 		{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5},  {7,2,11}
 };
 
-static GLfloat light_pos[] = { 0.1, 0.2, 0.0, 1.0 };
-
 extern GLfloat colors[COLOR_BUTTON_COUNT][4];
 extern GLfloat shininess_sphere,
 	   shininess_glass;
+
+GLfloat aspect_ratio;
 
 void normalize(GLfloat *a)
 {
@@ -83,21 +83,27 @@ gint init(GtkWidget *widget)
 {
 	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
 	{
-		GLfloat m_specular[] = { 0.6, 0.6, 0.6, 1.0 },
-				m_diffuse[] = { 0.6, 0.5, 0.5, 1.0 };
+		GLfloat m_ambient[] = { 0.3, 0.3, 0.3, 0.3 };
+		//		m_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
+		GLfloat light_pos[] = { 3.0, 3.0, 3.0, 1.0 };
+
+		glClearColor(0, 0, 0, 1);
+		glClearDepth(1.0);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_NORMALIZE);
 
+		//glDepthFunc(GL_LEQUAL);
+
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, m_ambient);
 		glShadeModel(GL_SMOOTH);
 
-		glMaterialfv(GL_FRONT, GL_SPECULAR, m_specular);
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, m_diffuse);
-
-		glMaterialf(GL_FRONT, GL_SHININESS, 50);
+		glCullFace(GL_BACK);
 
 		glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 
@@ -124,16 +130,31 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
-		glClearColor(0, 0, 0, 1);
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+
+		glOrtho(-2*aspect_ratio, 2*aspect_ratio, -2.0, 2.0, -10.0, 10.0);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
 
 		glMaterialfv(GL_FRONT, GL_AMBIENT,  m_sphere[0]);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE,  m_sphere[1]);
 		glMaterialfv(GL_FRONT, GL_SPECULAR, m_sphere[2]);
 		glMaterialfv(GL_FRONT, GL_EMISSION, m_sphere[3]);
 
-		glRotatef(x+=0.5, 0, 1, 0);
-		glTranslatef(0.5, 0.0, 0.0);
+		glPushMatrix();
+		glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+		glTranslatef(1.0, 0.0, 0.0);
 		draw_sphere(3, 0.5);
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+		glTranslatef(-1.0, 0.0, 0.0);
+		draw_sphere(3, 0.2);
+		glPopMatrix();
 
 		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
 	}
@@ -147,10 +168,10 @@ gint reshape(GtkWidget *widget, GdkEventConfigure *event)
 		int w = widget->allocation.width,
 			h = widget->allocation.height;
 
-		glClearColor(0, 0, 0, 1);
+		aspect_ratio = ((GLfloat)w)/((GLfloat)h);
+
 		glViewport(0, 0, w, h);
-		glLoadIdentity();
-		gluPerspective(45.0, ((GLfloat)w)/((GLfloat)h), 0.0, 100.0);
+		//gluPerspective(90.0, ((GLfloat)w)/((GLfloat)h), 0.0, 150.0);
 	}
 	return TRUE;
 }
