@@ -2,6 +2,7 @@
 #define _GL_H_
 
 #include <gtk/gtk.h>
+#include <GL/gl.h>
 
 void normalize(GLfloat *a);
 void draw_triangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, GLfloat f);
