@@ -100,6 +100,7 @@ void create_widgets(int *argc, char ***argv)
 		GDK_GL_RED_SIZE,1,
 		GDK_GL_GREEN_SIZE,1,
 		GDK_GL_BLUE_SIZE,1,
+		GDK_GL_DEPTH_SIZE, 1,
 		GDK_GL_DOUBLEBUFFER,
 		GDK_GL_NONE
 	};
@@ -241,9 +242,9 @@ void init_color_buttons(GtkWidget **buttons)
 		"#EFFF00",
 		"#00FF2D",
 		"#000000",
-		"#000000",
-		"#000000",
-		"#000000",
+		"#4760FF",
+		"#47ABFF",
+		"#0C14FF",
 		"#000000",
 		"#6F6F6F",
 		"#FFFFFF",
@@ -257,6 +258,7 @@ void init_color_buttons(GtkWidget **buttons)
 		colors[i][0] = col.red   / 65536.0;
 		colors[i][1] = col.green / 65536.0;
 		colors[i][2] = col.blue  / 65536.0;
+		colors[i][3] = 0.0;
 
 		gtk_color_button_set_color(GTK_COLOR_BUTTON(buttons[i]), &col);
 	}
