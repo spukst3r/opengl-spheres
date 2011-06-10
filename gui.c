@@ -244,7 +244,7 @@ void init_color_buttons(GtkWidget **buttons)
 		"#000000",
 		"#4760FF",
 		"#47ABFF",
-		"#0C14FF",
+		"#FFFFFF",
 		"#000000",
 		"#6F6F6F",
 		"#FFFFFF",
