@@ -83,9 +83,7 @@ gint init(GtkWidget *widget)
 {
 	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
 	{
-		GLfloat m_ambient[] = { 0.3, 0.3, 0.3, 0.3 };
 		//		m_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
-		GLfloat light_pos[] = { 3.0, 3.0, 3.0, 1.0 };
 
 		glClearColor(0, 0, 0, 1);
 		glClearDepth(1.0);
@@ -95,17 +93,22 @@ gint init(GtkWidget *widget)
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_NORMALIZE);
+		glEnable(GL_BLEND);
 
 		//glDepthFunc(GL_LEQUAL);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, m_ambient);
+		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+		//glLightfv(GL_LIGHT1, GL_DIFFUSE, m_ambient);
+		//glLightfv(GL_LIGHT1, GL_AMBIENT, m_ambient);
+		//glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.1);
+
 		glShadeModel(GL_SMOOTH);
 
 		glCullFace(GL_BACK);
-
-		glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -120,7 +123,14 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		return TRUE;
 	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
 	{
-		static GLfloat x = 0;
+		static GLint x = 0, x2 = 0;
+		static GLfloat movement_z = 0,
+					   step = 0.05;
+		static GLfloat light_pos[] = { 0.0, 0.0, 0.0, 1.0 },
+					   light_dir[] = { 0.0, 0.0, 1.0, 0.0 };
+		GLfloat l_ambient[]  = { colors[8][0],  colors[8][1],  colors[8][2],  colors[8][3], 1.0 },
+				l_diffuse[]  = { colors[9][0],  colors[9][1],  colors[9][2],  colors[9][3], 1.0 },
+				l_specular[] = { colors[10][0], colors[10][1], colors[10][2], colors[10][3], 1.0 };
 		GLfloat m_sphere[4][4];
 		int i, j;
 
@@ -135,7 +145,7 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glLoadIdentity();
 
 		//glOrtho(-2*aspect_ratio, 2*aspect_ratio, -2.0, 2.0, -10.0, 10.0);
-		gluPerspective(45.0, aspect_ratio, 0.1, 150.0);
+		gluPerspective(45.0, aspect_ratio, 2.0, 25.0);
 
 		gluLookAt(0.0, -2.0, -6.0,
 				0.0, 0.0, 0.0,
@@ -144,25 +154,37 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, l_ambient);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, l_ambient);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, l_diffuse);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, l_specular);
+
+		glLightfv(GL_LIGHT1, GL_POSITION, light_dir);
+
 		glMaterialfv(GL_FRONT, GL_AMBIENT,  m_sphere[0]);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE,  m_sphere[1]);
 		glMaterialfv(GL_FRONT, GL_SPECULAR, m_sphere[2]);
 		glMaterialfv(GL_FRONT, GL_EMISSION, m_sphere[3]);
+		glMaterialf(GL_FRONT, GL_SHININESS, shininess_sphere);
 
 		glPushMatrix();
-			//glTranslatef(x, 0.0, 0.0);
+			glTranslatef(0.0, 0.0, movement_z+=step);
 			glPushMatrix();
-				glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+				glRotatef((GLfloat)(x+=4 % 360), 1.0, 0.3, 0.0);
 				glTranslatef(0.0, 0.0, -1.0);
-				draw_sphere(3, 0.4);
+				glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+				draw_sphere(3, 0.1);
 			glPopMatrix();
 	
 			glPushMatrix();
-				glRotatef(x+=0.5, 0.0, 1.0, 0.0);
+				glRotatef((GLfloat)(x2++ % 360), 0.0, 1.0, 0.0);
 				glTranslatef(0.0, 0.0, 1.0);
 				draw_sphere(3, 0.4);
 			glPopMatrix();
 		glPopMatrix();
+
+		if (movement_z > 5 || movement_z < 0)
+			step = -step;
 
 		gtk_gl_area_swapbuffers(GTK_GL_AREA(widget));
 	}
