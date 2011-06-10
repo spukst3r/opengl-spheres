@@ -93,8 +93,7 @@ gint init(GtkWidget *widget)
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
-		glEnable(GL_LIGHT1);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glEnable(GL_NORMALIZE);
 		glEnable(GL_FOG);
 
@@ -107,7 +106,7 @@ gint init(GtkWidget *widget)
 		glEndList();
 
 		glNewList(2, GL_COMPILE);
-			draw_sphere(3, 0.3);
+			draw_sphere(3, 0.2);
 		glEndList();
 
 		glDepthFunc(GL_LEQUAL);
@@ -161,7 +160,7 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 
 		gluPerspective(45.0, aspect_ratio, 2.0, 25.0);
 
-		gluLookAt(0.0, -2.0, -6.0,
+		gluLookAt(0.0, -1.0, -4.0,
 				0.0, 0.0, 0.0,
 				0.0, 1.0, 0.0);
 
@@ -172,8 +171,6 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glLightfv(GL_LIGHT0, GL_AMBIENT, l_ambient);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, l_diffuse);
 		glLightfv(GL_LIGHT0, GL_SPECULAR, l_specular);
-
-		glLightfv(GL_LIGHT1, GL_POSITION, light_dir);
 
 		glPushMatrix();
 			glTranslatef(0.0, 0.0, movement_z+=step);
@@ -202,7 +199,7 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 				glMaterialf(GL_FRONT, GL_SHININESS, shininess_glass);
 
 				glRotatef((GLfloat)(x+=4 % 360), 1.0, 0.3, 0.0);
-				glTranslatef(0.0, 0.0, -1.5);
+				glTranslatef(0.0, 0.0, -2.0);
 
 				glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 
