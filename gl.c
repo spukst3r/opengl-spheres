@@ -25,6 +25,8 @@ extern GLfloat shininess_sphere,
 	   shininess_glass;
 
 GLfloat aspect_ratio;
+GLint sphere_solid,
+	  sphere_glass;
 
 void normalize(GLfloat *a)
 {
@@ -83,8 +85,6 @@ gint init(GtkWidget *widget)
 {
 	if (gtk_gl_area_make_current(GTK_GL_AREA(widget)))
 	{
-		//		m_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
-
 		glClearColor(0, 0, 0, 1);
 		glClearDepth(1.0);
 		glMatrixMode(GL_PROJECTION);
@@ -96,15 +96,23 @@ gint init(GtkWidget *widget)
 		glEnable(GL_LIGHT1);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_NORMALIZE);
-		glEnable(GL_BLEND);
+		glEnable(GL_FOG);
 
-		//glDepthFunc(GL_LEQUAL);
-		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		glFogf(GL_FOG_DENSITY, 0.50);
+		glFogf(GL_FOG_START, -6.0);
+		glFogf(GL_FOG_END, 8.0);
+
+		glNewList(1, GL_COMPILE);
+			draw_sphere(3, 0.4);
+		glEndList();
+
+		glNewList(2, GL_COMPILE);
+			draw_sphere(3, 0.3);
+		glEndList();
+
+		glDepthFunc(GL_LEQUAL);
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 		glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-		//glLightfv(GL_LIGHT1, GL_DIFFUSE, m_ambient);
-		//glLightfv(GL_LIGHT1, GL_AMBIENT, m_ambient);
-		//glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.1);
 
 		glShadeModel(GL_SMOOTH);
 
@@ -131,12 +139,19 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		GLfloat l_ambient[]  = { colors[8][0],  colors[8][1],  colors[8][2],  colors[8][3], 1.0 },
 				l_diffuse[]  = { colors[9][0],  colors[9][1],  colors[9][2],  colors[9][3], 1.0 },
 				l_specular[] = { colors[10][0], colors[10][1], colors[10][2], colors[10][3], 1.0 };
-		GLfloat m_sphere[4][4];
+		GLfloat m_sphere[4][4],
+				m_glass[4][4];
 		int i, j;
 
 		for (i=0; i<4; i++)
-			for (j=0; j<4; j++)
+		{
+			for (j=0; j<3; j++)
+			{
 				m_sphere[i][j] = colors[i][j];
+				m_glass[i][j]  = colors[i+4][j];
+			}
+			m_glass[i][3] = 0.6;
+		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
@@ -144,7 +159,6 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
-		//glOrtho(-2*aspect_ratio, 2*aspect_ratio, -2.0, 2.0, -10.0, 10.0);
 		gluPerspective(45.0, aspect_ratio, 2.0, 25.0);
 
 		gluLookAt(0.0, -2.0, -6.0,
@@ -161,25 +175,41 @@ gint draw(GtkWidget *widget, GdkEventExpose *event)
 
 		glLightfv(GL_LIGHT1, GL_POSITION, light_dir);
 
-		glMaterialfv(GL_FRONT, GL_AMBIENT,  m_sphere[0]);
-		glMaterialfv(GL_FRONT, GL_DIFFUSE,  m_sphere[1]);
-		glMaterialfv(GL_FRONT, GL_SPECULAR, m_sphere[2]);
-		glMaterialfv(GL_FRONT, GL_EMISSION, m_sphere[3]);
-		glMaterialf(GL_FRONT, GL_SHININESS, shininess_sphere);
-
 		glPushMatrix();
 			glTranslatef(0.0, 0.0, movement_z+=step);
 			glPushMatrix();
-				glRotatef((GLfloat)(x+=4 % 360), 1.0, 0.3, 0.0);
-				glTranslatef(0.0, 0.0, -1.0);
-				glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-				draw_sphere(3, 0.1);
+				glMaterialfv(GL_FRONT, GL_AMBIENT,  m_sphere[0]);
+				glMaterialfv(GL_FRONT, GL_DIFFUSE,  m_sphere[1]);
+				glMaterialfv(GL_FRONT, GL_SPECULAR, m_sphere[2]);
+				glMaterialfv(GL_FRONT, GL_EMISSION, m_sphere[3]);
+				glMaterialf(GL_FRONT, GL_SHININESS, shininess_sphere);
+
+				glRotatef((GLfloat)(x2++ % 360), 0.0, 1.0, 0.0);
+				glTranslatef(0.0, 0.0, 1.0);
+
+				glCallList(1);
 			glPopMatrix();
 	
 			glPushMatrix();
-				glRotatef((GLfloat)(x2++ % 360), 0.0, 1.0, 0.0);
-				glTranslatef(0.0, 0.0, 1.0);
-				draw_sphere(3, 0.4);
+				glEnable(GL_BLEND);
+				glDepthMask(GL_FALSE);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+				glMaterialfv(GL_FRONT, GL_AMBIENT,  m_glass[0]);
+				glMaterialfv(GL_FRONT, GL_DIFFUSE,  m_glass[1]);
+				glMaterialfv(GL_FRONT, GL_SPECULAR, m_glass[2]);
+				glMaterialfv(GL_FRONT, GL_EMISSION, m_glass[3]);
+				glMaterialf(GL_FRONT, GL_SHININESS, shininess_glass);
+
+				glRotatef((GLfloat)(x+=4 % 360), 1.0, 0.3, 0.0);
+				glTranslatef(0.0, 0.0, -1.5);
+
+				glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+
+				glCallList(2);
+
+				glDisable(GL_BLEND);
+				glDepthMask(GL_TRUE);
 			glPopMatrix();
 		glPopMatrix();
 
