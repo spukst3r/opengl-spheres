@@ -1,0 +1,6 @@
+*.o
+CMake*
+!CMakeLists.txt
+cmake_install.cmake
+opengl-spheres
+Makefile
