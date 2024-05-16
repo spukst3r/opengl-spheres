@@ -4,3 +4,12 @@ Requirements:
 * gtk+-2.2
 * gtkglarea
 
+ARCH:
+`	mkdir build
+	cd build
+	git clone https://aur.archlinux.org/gtkglarea.git
+	cd gtkglarea
+	makepkg -si
+	cd ..
+	cmake .. && make
+	cp ../menu.xml .`

@@ -20,6 +20,6 @@ if (UNIX)
 	add_executable(${PROJECT} ${SOURCES})
 	
 	target_link_libraries(${PROJECT} ${GTK2_LIBRARIES} ${OPENGL_gl_LIBRARY}
-		${OPENGL_glu_LIBRARY} ${GTKGL_LIBRARIES})
+		${OPENGL_glu_LIBRARY} ${GTKGL_LIBRARIES} m)
 endif (UNIX)
 

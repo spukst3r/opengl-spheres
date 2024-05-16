@@ -1,5 +1,6 @@
 #include <gtkgl/gtkglarea.h>
 #include <GL/gl.h>
+#include <GL/glu.h>
 #include <math.h>
 
 #include "gl.h"
